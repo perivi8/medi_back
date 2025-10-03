@@ -19,6 +19,8 @@ from fast_train import fast_train
 from utils import hash_password, verify_password, create_access_token, decode_token, get_current_user
 from database import supabase_client, init_database
 from error_handler import setup_error_handlers, log_startup_info, request_logging_middleware
+from fixed_email_service import fixed_email_service as email_service
+
 from email_service import email_service
 
 app = FastAPI(title="India Medical Insurance ML Dashboard", version="1.0.0")

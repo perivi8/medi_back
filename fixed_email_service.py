@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Optimized Email Service for MediCare+ Platform - Render Deployment
-Handles sending prediction reports via Gmail SMTP with timeout optimization
+Fixed Email Service for MediCare+ Platform
+Handles network connectivity issues gracefully
 """
 
 import smtplib
@@ -18,10 +18,10 @@ import concurrent.futures
 import socket
 from dotenv import load_dotenv
 
-# Load environment variables explicitly
+# Load environment variables
 load_dotenv()
 
-class EmailService:
+class FixedEmailService:
     def __init__(self):
         self.smtp_server = "smtp.gmail.com"
         self.smtp_port = 587
@@ -44,7 +44,7 @@ class EmailService:
     
     def is_email_enabled(self) -> bool:
         """Check if email service is properly configured"""
-        return self.email_enabled
+        return self.email_enabled and self.sender_email is not None and self.sender_password is not None
         
     def create_prediction_email_template(self) -> str:
         """Create HTML email template for prediction reports"""
@@ -199,6 +199,9 @@ class EmailService:
     async def send_prediction_email_async(self, recipient_email: str, prediction_data: Dict[str, Any], patient_data: Dict[str, Any]) -> Dict[str, Any]:
         """Async email sending with timeout control for Render deployment"""
         
+        # Initialize timeout variable
+        original_timeout = None
+        
         try:
             # Set socket timeout for the entire operation
             original_timeout = socket.getdefaulttimeout()
@@ -299,10 +302,11 @@ class EmailService:
                     print(f"⚠️ Email sending failed: {e}")
                     success = await self._store_email_report_locally_async(recipient_email, prediction_data, patient_data)
                     # Check if it's a network error
-                    if "Network is unreachable" in str(e) or (hasattr(e, 'errno') and e.errno == 101):
+                    error_str = str(e).lower()
+                    if "network is unreachable" in error_str or "errno 101" in error_str or "timeout" in error_str:
                         return {
                             "success": False,
-                            "message": f"Network connectivity issue: {str(e)}. The system cannot reach the Gmail SMTP server. Please check your network connection or try again later. Your report has been saved locally.",
+                            "message": f"Network connectivity issue detected: {str(e)}. The system cannot reach the Gmail SMTP server. Please check your network connection or try again later. Your report has been saved locally.",
                             "error": str(e),
                             "network_error": True
                         }
@@ -323,7 +327,8 @@ class EmailService:
         finally:
             # Restore original timeout
             try:
-                socket.setdefaulttimeout(original_timeout)
+                if 'original_timeout' in locals():
+                    socket.setdefaulttimeout(original_timeout)
             except:
                 pass
     
@@ -332,6 +337,10 @@ class EmailService:
         start_time = datetime.now()
         
         try:
+            # Validate that we have required credentials
+            if not self.sender_email or not self.sender_password:
+                raise ValueError("Missing sender email or password")
+                
             # Create optimized SSL context
             context = ssl.create_default_context()
             context.check_hostname = False
@@ -358,8 +367,8 @@ class EmailService:
             
         except OSError as e:
             # Handle network connectivity issues specifically
-            if e.errno == 101 or "Network is unreachable" in str(e):
-                send_time = (datetime.now() - start_time).total_seconds()
+            send_time = (datetime.now() - start_time).total_seconds()
+            if hasattr(e, 'errno') and e.errno == 101:
                 print(f"📡 Network connectivity issue after {send_time:.2f}s: {e}")
                 print("💡 This may be due to:")
                 print("   - Firewall restrictions")
@@ -368,7 +377,6 @@ class EmailService:
                 print("   - Running in an environment with limited network access")
                 raise Exception(f"Network connectivity issue: {str(e)}. The system cannot reach the Gmail SMTP server. Please check your network connection or try again later.")
             else:
-                send_time = (datetime.now() - start_time).total_seconds()
                 print(f"❌ Email send failed after {send_time:.2f}s: {e}")
                 raise e
         except Exception as e:
@@ -426,210 +434,6 @@ class EmailService:
         except Exception as e:
             print(f"❌ Sync storage failed: {e}")
             return False
-    
-    def _simulate_email_send(self, recipient_email: str, prediction_data: Dict, patient_data: Dict):
-        """Simulate email sending for demo purposes"""
-        prediction_amount = self.format_currency(prediction_data.get('prediction', 0))
-        confidence = round(prediction_data.get('confidence', 0) * 100, 1)
-        timestamp = datetime.now().strftime("%B %d, %Y at %I:%M %p IST")
-        
-        print("="*60)
-        print("📧 DEMO EMAIL SIMULATION")
-        print("="*60)
-        print(f"To: {recipient_email}")
-        print(f"From: MediCare+ Platform <{self.sender_email}>")
-        print(f"Subject: 🏥 MediCare+ Prediction Report - {prediction_amount}")
-        print(f"Generated: {timestamp}")
-        print("-"*60)
-        print("📋 PATIENT INFORMATION:")
-        print(f"   Age: {patient_data.get('age')} years")
-        print(f"   BMI: {patient_data.get('bmi')}")
-        print(f"   Gender: {patient_data.get('gender')}")
-        print(f"   Smoker: {patient_data.get('smoker')}")
-        print(f"   Region: {patient_data.get('region')}")
-        print(f"   Premium: ₹{patient_data.get('premium_annual_inr', 'Estimated')}")
-        print("-"*60)
-        print("🎯 PREDICTION RESULTS:")
-        print(f"   Predicted Claim: {prediction_amount}")
-        print(f"   Confidence: {confidence}%")
-        print("-"*60)
-        print("✅ Email simulation completed successfully!")
-        print("💡 To send real emails, configure actual Gmail credentials")
-        print("="*60)
-    
-    def send_prediction_email(self, recipient_email: str, prediction_data: Dict[str, Any], patient_data: Dict[str, Any]) -> bool:
-        """Send prediction report via email with graceful error handling and fallback"""
-        
-        # Always try to store report locally first as backup
-        local_backup_success = self._store_email_report_locally(recipient_email, prediction_data, patient_data)
-        
-        # Check if email service is enabled
-        if not self.is_email_enabled():
-            print("⚠️ Email service is disabled - report stored locally instead")
-            return local_backup_success
-        
-        print(f"📧 Attempting to send email to {recipient_email}...")
-        
-        try:
-            # Prepare email data
-            prediction_amount = self.format_currency(prediction_data.get('prediction', 0))
-            confidence = round(prediction_data.get('confidence', 0) * 100, 1)
-            timestamp = datetime.now().strftime("%B %d, %Y at %I:%M %p IST")
-            
-            # BMI analysis
-            bmi = float(patient_data.get('bmi', 0))
-            if bmi < 18.5:
-                bmi_category = "Underweight"
-                risk_level = "Moderate"
-                risk_class = "risk-assessment"
-                risk_description = "BMI below normal range may indicate nutritional deficiencies"
-            elif bmi < 25:
-                bmi_category = "Normal Weight"
-                risk_level = "Low"
-                risk_class = "risk-low"
-                risk_description = "BMI in healthy range - optimal for insurance risk assessment"
-            elif bmi < 30:
-                bmi_category = "Overweight"
-                risk_level = "Moderate"
-                risk_class = "risk-assessment"
-                risk_description = "BMI above normal range - lifestyle modifications recommended"
-            else:
-                bmi_category = "Obese"
-                risk_level = "High"
-                risk_class = "risk-high"
-                risk_description = "BMI indicates obesity - significant health risks and higher claim probability"
-            
-            # Generate insights
-            insights = self.generate_insights(patient_data, prediction_data)
-            
-            # Create email with enhanced headers for better Gmail delivery
-            msg = MIMEMultipart('alternative')
-            msg['Subject'] = f"🏥 MediCare+ Medical Insurance Prediction Report - {prediction_amount}"
-            msg['From'] = f"{self.sender_name} <{self.sender_email}>"
-            msg['To'] = recipient_email
-            msg['Reply-To'] = self.sender_email
-            msg['X-Mailer'] = "MediCare+ Platform v1.0"
-            msg['X-Priority'] = "3"  # Normal priority
-            msg['Message-ID'] = f"<{datetime.now().strftime('%Y%m%d%H%M%S')}.{recipient_email.replace('@', '_at_').replace('.', '_dot_')}@medicare-plus.com>"
-            msg['Date'] = datetime.now().strftime('%a, %d %b %Y %H:%M:%S +0530')
-            msg['MIME-Version'] = "1.0"
-            msg['Content-Type'] = "multipart/alternative"
-            # Remove bulk headers that might trigger spam filters
-            # msg['List-Unsubscribe'] = f"<mailto:{self.sender_email}?subject=Unsubscribe>"
-            # msg['X-Auto-Response-Suppress'] = "OOF, DR, RN, NRN, AutoReply"
-            # msg['Precedence'] = "bulk"
-            
-            # Create HTML content
-            template = Template(self.create_prediction_email_template())
-            html_content = template.render(
-                patient_data=patient_data,
-                prediction_amount=prediction_amount,
-                confidence=confidence,
-                timestamp=timestamp,
-                bmi_category=bmi_category,
-                risk_level=risk_level,
-                risk_class=risk_class,
-                risk_description=risk_description,
-                insights=insights,
-                recipient_email=recipient_email,
-                sender_email=self.sender_email
-            )
-            
-            # Attach HTML content
-            html_part = MIMEText(html_content, 'html')
-            msg.attach(html_part)
-            
-            # Send email with optimized connection
-            print(f"🔗 Connecting to {self.smtp_server}:{self.smtp_port}...")
-            context = ssl.create_default_context()
-            
-            # Optimize SSL context for speed
-            context.check_hostname = False
-            context.verify_mode = ssl.CERT_NONE
-            
-            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
-                print("🔐 Starting TLS...")
-                server.starttls(context=context)
-                print("🔑 Logging in...")
-                server.login(self.sender_email, self.sender_password)
-                print("📧 Sending email...")
-                
-                # Send with proper envelope
-                server.sendmail(
-                    from_addr=self.sender_email,
-                    to_addrs=[recipient_email],
-                    msg=msg.as_string()
-                )
-            
-            print(f"✅ Email sent successfully to {recipient_email}")
-            print(f"📬 Subject: {msg['Subject']}")
-            print(f"⏰ Sent at: {timestamp}")
-            
-            # Skip database storage for faster email sending
-            print(f"📧 Email sent successfully - skipping database storage for speed")
-            
-            return True
-            
-        except (OSError, ConnectionError, TimeoutError) as e:
-            print(f"⚠️ Network error: {e}")
-            print("📝 Email report already stored locally as backup")
-            return local_backup_success  # Return success since we have local backup
-        except smtplib.SMTPAuthenticationError as e:
-            print(f"❌ SMTP Authentication failed: {e}")
-            print("💡 Check Gmail App Password configuration")
-            print("📝 Email report already stored locally as backup")
-            return local_backup_success  # Return success since we have local backup
-        except smtplib.SMTPRecipientsRefused as e:
-            print(f"❌ Recipient email refused: {e}")
-            print("💡 Check recipient email address")
-            print("📝 Email report already stored locally as backup")
-            return local_backup_success  # Return success since we have local backup
-        except smtplib.SMTPException as e:
-            print(f"❌ SMTP error: {e}")
-            print("📝 Email report already stored locally as backup")
-            return local_backup_success  # Return success since we have local backup
-        except Exception as e:
-            print(f"⚠️ Email sending failed: {e}")
-            print(f"📝 Email report already stored locally as backup")
-            return local_backup_success  # Return success since we have local backup
-    
-    def _store_email_report_locally(self, recipient_email: str, prediction_data: Dict[str, Any], patient_data: Dict[str, Any]) -> bool:
-        """Store email report locally when sending fails"""
-        try:
-            report = {
-                "recipient": recipient_email,
-                "prediction": prediction_data,
-                "patient_data": patient_data,
-                "timestamp": datetime.now().isoformat(),
-                "status": "stored_locally"
-            }
-            
-            # Store in local file
-            reports_file = "email_reports.json"
-            reports = []
-            
-            if os.path.exists(reports_file):
-                try:
-                    with open(reports_file, 'r') as f:
-                        reports = json.load(f)
-                except:
-                    reports = []
-            
-            reports.append(report)
-            
-            # Keep only last 100 reports
-            if len(reports) > 100:
-                reports = reports[-100:]
-            
-            with open(reports_file, 'w') as f:
-                json.dump(reports, f, indent=2)
-            
-            print(f"✅ Email report stored locally for {recipient_email}")
-            return True
-            
-        except Exception as e:
-            print(f"❌ Failed to store email report locally: {e}")
-            return False
 
 # Global email service instance
-email_service = EmailService()
+fixed_email_service = FixedEmailService()

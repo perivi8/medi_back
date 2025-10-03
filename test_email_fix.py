@@ -1,120 +1,85 @@
 #!/usr/bin/env python3
 """
-Test email service fixes
+Test the email fix for network issues
 """
 
-import requests
-import json
-import time
+import asyncio
+import os
+from dotenv import load_dotenv
+from email_service import EmailService
 
-def test_email_endpoint():
-    """Test the send-prediction-email endpoint"""
+async def test_email_network_error():
+    """Test email sending with network error handling"""
+    print("🔍 Testing Email Network Error Handling")
+    print("=" * 50)
     
-    base_url = "https://india-medical-insurance-backend.onrender.com"
+    # Load environment variables
+    load_dotenv()
+    
+    # Create email service
+    email_service = EmailService()
+    
+    # Check if email service is enabled
+    if not email_service.is_email_enabled():
+        print("❌ Email service is not enabled")
+        return False
+    
+    print(f"✅ Email service enabled - Sender: {email_service.sender_email}")
     
     # Test data
-    test_request = {
-        "email": "test@example.com",
-        "prediction": {
-            "prediction": 25000.0,
-            "confidence": 0.85
-        },
-        "patient_data": {
-            "age": 30,
-            "bmi": 25.5,
-            "gender": "Male",
-            "smoker": "No",
-            "region": "North",
-            "premium_annual_inr": 20000
-        }
+    test_email = "perivihari8@gmail.com"
+    test_prediction = {
+        "prediction": 25000,
+        "confidence": 0.88
+    }
+    test_patient_data = {
+        "age": 28,
+        "bmi": 24.5,
+        "gender": "Male",
+        "smoker": "No",
+        "region": "South",
+        "premium_annual_inr": 22000
     }
     
-    print("🧪 Testing Email Service Fix")
-    print("=" * 50)
-    print(f"Sending request to: {base_url}/send-prediction-email")
-    print(f"Test email: {test_request['email']}")
+    print(f"📤 Sending test email to: {test_email}")
     
+    # Send email
+    result = await email_service.send_prediction_email_async(
+        recipient_email=test_email,
+        prediction_data=test_prediction,
+        patient_data=test_patient_data
+    )
+    
+    print(f"📊 Result:")
+    print(f"   Success: {'✅ YES' if result.get('success') else '❌ NO'}")
+    print(f"   Message: {result.get('message')}")
+    if 'send_time' in result:
+        print(f"   Send Time: {result.get('send_time')}")
+    if 'network_error' in result:
+        print(f"   Network Error: {'YES' if result.get('network_error') else 'NO'}")
+    if 'error' in result:
+        print(f"   Error Details: {result.get('error')}")
+    
+    # Check if report was stored locally
     try:
-        response = requests.post(
-            f"{base_url}/send-prediction-email",
-            json=test_request,
-            headers={"Content-Type": "application/json"},
-            timeout=30
-        )
-        
-        print(f"\n📊 Response Status: {response.status_code}")
-        
-        if response.status_code == 200:
-            result = response.json()
-            print("✅ Request successful!")
-            print(f"Success: {result.get('success')}")
-            print(f"Message: {result.get('message')}")
-            
-            if result.get('success'):
-                print("\n🎉 Email service is working correctly!")
-                print("✅ No more 500 errors")
-                print("✅ Graceful error handling implemented")
-                return True
-            else:
-                print("\n⚠️ Email service returned success=false")
-                return False
-                
+        import json
+        if os.path.exists("email_reports.json"):
+            with open("email_reports.json", 'r') as f:
+                reports = json.load(f)
+                if reports:
+                    latest_report = reports[-1]
+                    if latest_report.get("recipient") == test_email:
+                        print("✅ Email report was stored locally as backup")
+                    else:
+                        print("⚠️ Local storage may have issues")
+                else:
+                    print("⚠️ No reports found in local storage")
         else:
-            print(f"❌ Request failed with status: {response.status_code}")
-            print(f"Response: {response.text}")
-            return False
-            
-    except requests.exceptions.Timeout:
-        print("⚠️ Request timed out (this might be expected for cold starts)")
-        return False
+            print("⚠️ Email reports file not found")
     except Exception as e:
-        print(f"❌ Request failed: {e}")
-        return False
-
-def test_health_endpoint():
-    """Test that the main API is still working"""
+        print(f"⚠️ Could not verify local storage: {e}")
     
-    base_url = "https://india-medical-insurance-backend.onrender.com"
-    
-    try:
-        response = requests.get(f"{base_url}/health", timeout=10)
-        if response.status_code == 200:
-            print("✅ Health endpoint working")
-            return True
-        else:
-            print(f"❌ Health endpoint failed: {response.status_code}")
-            return False
-    except Exception as e:
-        print(f"❌ Health endpoint error: {e}")
-        return False
-
-def main():
-    """Main test function"""
-    print("🏥 Email Service Fix Verification")
-    print("=" * 60)
-    
-    # Test health first
-    health_ok = test_health_endpoint()
-    
-    if health_ok:
-        print("\n" + "=" * 60)
-        # Test email endpoint
-        email_ok = test_email_endpoint()
-        
-        print("\n" + "=" * 60)
-        print("📊 Test Results:")
-        print(f"Health Endpoint: {'✅ WORKING' if health_ok else '❌ FAILED'}")
-        print(f"Email Endpoint: {'✅ FIXED' if email_ok else '❌ STILL ISSUES'}")
-        
-        if health_ok and email_ok:
-            print("\n🎉 All tests passed! Email service is fixed.")
-            print("✅ No more 500 errors on email sending")
-            print("✅ Graceful error handling implemented")
-            print("✅ Reports stored locally when email fails")
-        else:
-            print("\n⚠️ Some issues remain. Check the logs above.")
-    else:
-        print("\n❌ Backend health check failed. Cannot test email service.")
+    return result.get('success', False)
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(test_email_network_error())
