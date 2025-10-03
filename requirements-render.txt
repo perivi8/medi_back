@@ -23,3 +23,4 @@ email-validator==2.1.0
 aiofiles==23.2.1
 # Add requests for HTTP-based email services (required for Render)
 requests==2.31.0
+aiohttp==3.9.1

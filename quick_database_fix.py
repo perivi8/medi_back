@@ -24,7 +24,7 @@ class DatabaseFixer:
         print("🏥 MediCare+ PGRST205 Quick Fix")
         print("=" * 50)
         print(f"Backend URL: {self.backend_url}")
-        print(f"Render Service: srv-d3b668ogjchc73f9ece0")
+        print(f"Render Service: medi-back-qjwm")
         print("=" * 50)
     
     def check_environment(self):

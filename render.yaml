@@ -23,7 +23,7 @@ services:
       - key: ENVIRONMENT
         value: production
       - key: ALLOWED_ORIGINS
-        value: https://india-medical-insurance-frontend.vercel.app,http://localhost:3000,*
+        value: https://medi-front-gamma.vercel.app,http://localhost:3000,*
       - key: GMAIL_EMAIL
         value: gokrishna98@gmail.com
       - key: GMAIL_APP_PASSWORD

@@ -18,7 +18,7 @@ def show_render_update_instructions():
     print("\n🔧 STEP 1: Update Environment Variables in Render Dashboard")
     print("-" * 60)
     print("1. Go to: https://dashboard.render.com")
-    print("2. Select your backend service: srv-d3b668ogjchc73f9ece0")
+    print("2. Select your backend service: medi-back-qjwm")
     print("3. Click 'Environment' tab")
     print("4. Add/Update these environment variables:")
     print()

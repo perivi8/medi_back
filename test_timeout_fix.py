@@ -13,15 +13,15 @@ from datetime import datetime
 class EmailTimeoutTester:
     def __init__(self):
         self.local_backend = "http://localhost:8001"
-        self.render_backend = "https://srv-d3b668ogjchc73f9ece0-latest.onrender.com"
+        self.render_backend = "https://medi-back-qjwm.onrender.com"
         self.test_email = "gowthaamankrishna1998@gmail.com"
         
     def test_health_endpoint(self, backend_url):
         """Test health endpoint with timeout"""
         print(f"🏥 Testing health endpoint: {backend_url}")
         
+        start_time = time.time()  # Initialize start_time before try block
         try:
-            start_time = time.time()
             response = requests.get(f"{backend_url}/health", timeout=45)
             duration = time.time() - start_time
             
@@ -38,6 +38,7 @@ class EmailTimeoutTester:
             print(f"   ⏰ Health check timed out after {duration:.2f}s")
             return False
         except Exception as e:
+            duration = time.time() - start_time
             print(f"   ❌ Health check error: {e}")
             return False
     
@@ -63,9 +64,8 @@ class EmailTimeoutTester:
             }
         }
         
+        start_time = time.time()  # Initialize start_time before try block
         try:
-            start_time = time.time()
-            
             # Use longer timeout for Render services
             timeout = 150 if 'onrender.com' in backend_url else 60
             print(f"   ⏱️ Using {timeout}s timeout for email request")
@@ -95,6 +95,7 @@ class EmailTimeoutTester:
             print(f"   ⏰ Email request timed out after {duration:.2f}s")
             return False
         except Exception as e:
+            duration = time.time() - start_time
             print(f"   ❌ Email request error: {e}")
             return False
     

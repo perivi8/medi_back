@@ -165,7 +165,7 @@ essential_origins = [
     "http://localhost:3001", 
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3001",
-    "https://india-medical-insurance-frontend.vercel.app"
+    "https://medi-front-gamma.vercel.app"
 ]
 
 # Force wildcard for maximum compatibility if not already present
@@ -224,7 +224,7 @@ async def add_cors_headers(request, call_next):
         "http://localhost:3001",
         "http://127.0.0.1:3000", 
         "http://127.0.0.1:3001",
-        "https://india-medical-insurance-frontend.vercel.app"
+        "https://medi-front-gamma.vercel.app"
     ]
     
     if origin in allowed_origins_list or "*" in allowed_origins:

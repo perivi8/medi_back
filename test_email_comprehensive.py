@@ -80,7 +80,7 @@ def main():
     # Test both localhost and Render
     test_urls = [
         ("http://localhost:8001", "Localhost Backend"),
-        ("https://srv-d3b668ogjchc73f9ece0.onrender.com", "Render Backend")
+        ("https://medi-back-qjwm.onrender.com", "Render Backend")
     ]
     
     # Test emails

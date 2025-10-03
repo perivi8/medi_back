@@ -12,7 +12,7 @@ from datetime import datetime
 class EmailFixTester:
     def __init__(self):
         self.base_url = "http://localhost:8001"  # Local backend
-        self.render_url = "https://srv-d3b668ogjchc73f9ece0.onrender.com"  # Render backend
+        self.render_url = "https://medi-back-qjwm.onrender.com"  # Render backend
         
         print("="*70)
         print("🧪 EMAIL FIX COMPLETE TEST - MediCare+ Platform")

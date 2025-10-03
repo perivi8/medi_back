@@ -11,7 +11,7 @@ from datetime import datetime
 class AuthErrorTester:
     def __init__(self):
         self.base_url = "http://localhost:8001"
-        self.render_url = "https://srv-d3b668ogjchc73f9ece0.onrender.com"
+        self.render_url = "https://medi-back-qjwm.onrender.com"
         
         print("="*70)
         print("🧪 AUTH ERROR MESSAGE TESTING - MediCare+ Platform")

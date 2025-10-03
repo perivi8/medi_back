@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Emergency Fix for 500 Server Error - PGRST205 Database Issue
-Render Service: srv-d3b668ogjchc73f9ece0
+Render Service: medi-back-qjwm
 """
 
 import os
@@ -17,7 +17,7 @@ load_dotenv()
 
 class Emergency500Fix:
     def __init__(self):
-        self.render_service_id = "srv-d3b668ogjchc73f9ece0"
+        self.render_service_id = "medi-back-qjwm"
         self.backend_url = "https://india-medical-insurance-backend.onrender.com"
         self.supabase_url = "https://gucyzhjyciqnvxedmoxo.supabase.co"
         self.service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", 

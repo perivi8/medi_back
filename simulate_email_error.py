@@ -39,7 +39,7 @@ def simulate_email_error():
     # Try local backend first
     backends = [
         ("Local Backend", "http://localhost:8001"),
-        ("Render Backend", "https://srv-d3b668ogjchc73f9ece0.onrender.com")
+        ("Render Backend", "https://medi-back-qjwm.onrender.com")
     ]
     
     for backend_name, base_url in backends:

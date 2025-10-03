@@ -11,7 +11,7 @@ import time
 from datetime import datetime
 
 # Production backend URL
-PRODUCTION_URL = "https://srv-d3b668ogjchc73f9ece0-latest.onrender.com"
+PRODUCTION_URL = "https://medi-back-qjwm.onrender.com"
 LOCAL_URL = "http://localhost:8001"
 
 async def test_email_endpoint(base_url: str, environment: str):

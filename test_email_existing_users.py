@@ -11,7 +11,7 @@ from datetime import datetime
 
 # Configuration
 BASE_URL = "http://localhost:8001"  # Local backend
-# BASE_URL = "https://srv-d3b668ogjchc73f9ece0.onrender.com"  # Render backend
+# BASE_URL = "https://medi-back-qjwm.onrender.com"  # Render backend
 
 def test_email_for_existing_user():
     """Test email sending for users that already exist in the database"""
