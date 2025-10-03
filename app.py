@@ -1822,28 +1822,20 @@ async def admin_retrain_fast(current_user: str = Depends(get_current_user_from_t
 @app.post("/send-prediction-email", response_model=EmailResponse)
 async def send_prediction_email(request: EmailPredictionRequest):
     """
-    Email endpoint using SMTP service (Gmail)
-    Uses the configured Gmail SMTP settings from environment variables
+    Email endpoint using robust email service with multiple fallback mechanisms
+    Uses SMTP service (Gmail) with HTTP fallback and local storage
     """
     start_time = datetime.now()
     
     try:
-        print(f"📧 Processing email request for: {request.email} (SMTP SERVICE)")
+        print(f"📧 Processing email request for: {request.email} (ROBUST EMAIL SERVICE)")
         
-        # Use SMTP-based email service
-        from email_service import email_service
-        print("✅ Using SMTP-based email service")
+        # Use robust email service with multiple fallback mechanisms
+        from robust_email_service import robust_email_service
+        print("✅ Using robust email service with fallback mechanisms")
         
-        # Check if email service is enabled
-        if not email_service.is_email_enabled():
-            print("❌ Email service is not properly configured")
-            return EmailResponse(
-                success=False,
-                message="❌ Email service not configured. Please set GMAIL_EMAIL and GMAIL_APP_PASSWORD environment variables."
-            )
-        
-        # Send email using the SMTP service
-        result = await email_service.send_prediction_email_async(
+        # Send email using the robust service
+        result = await robust_email_service.send_prediction_email_async(
             recipient_email=str(request.email),
             prediction_data=request.prediction,
             patient_data=request.patient_data
@@ -1865,7 +1857,7 @@ async def send_prediction_email(request: EmailPredictionRequest):
         # Return result with proper error handling
         return EmailResponse(
             success=result.get("success", False),
-            message=result.get("message", f"❌ Email delivery failed for {request.email}")
+            message=result.get("message", f"📧 Email delivery result for {request.email}")
         )
             
     except Exception as e:
