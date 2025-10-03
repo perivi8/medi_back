@@ -1820,28 +1820,35 @@ async def admin_retrain_fast(current_user: str = Depends(get_current_user_from_t
 @app.post("/send-prediction-email", response_model=EmailResponse)
 async def send_prediction_email(request: EmailPredictionRequest):
     """
-    Email endpoint using SMTP service (Gmail)
-    Uses the configured Gmail SMTP settings from environment variables
+    Render-optimized email endpoint with HTTP-based email providers
+    Uses HTTP email services that work on Render deployment
     """
     start_time = datetime.now()
     
     try:
-        print(f"📧 Processing email request for: {request.email} (SMTP SERVICE)")
+        print(f"📧 Processing email request for: {request.email} (RENDER-OPTIMIZED SERVICE)")
         
-        # Use SMTP-based email service
-        from email_service import email_service
-        print("✅ Using SMTP-based email service")
+        # Use HTTP-based email service for Render deployment (SMTP ports are blocked)
+        email_service = None
+        try:
+            # Try HTTP email service first (SendGrid, Mailgun, etc.)
+            from render_http_email_service import render_http_email_service
+            email_service = render_http_email_service
+            print("✅ Using HTTP-based email service (compatible with Render)")
+        except ImportError:
+            try:
+                # Fallback to builtin HTTP service if requests not available
+                from render_builtin_email_service import render_builtin_email_service
+                email_service = render_builtin_email_service
+                print("✅ Using builtin HTTP-based email service")
+            except ImportError:
+                # Final fallback to bulletproof service with timeout controls
+                from bulletproof_email_service import bulletproof_email_service
+                email_service = bulletproof_email_service
+                print("⚠️ Using bulletproof email service (may timeout on Render)")
         
-        # Check if email service is enabled
-        if not email_service.is_email_enabled():
-            print("❌ Email service is not properly configured")
-            return EmailResponse(
-                success=False,
-                message="❌ Email service not configured. Please set GMAIL_EMAIL and GMAIL_APP_PASSWORD environment variables."
-            )
-        
-        # Send email using the SMTP service
-        result = await email_service.send_prediction_email_async(
+        # Send email using the selected service
+        result = await email_service.send_prediction_email(
             recipient_email=str(request.email),
             prediction_data=request.prediction,
             patient_data=request.patient_data
@@ -1876,7 +1883,9 @@ async def send_prediction_email(request: EmailPredictionRequest):
         return EmailResponse(
             success=False,
             message=f"❌ Email sending failed: {str(e)}. Please check your email address and try again."
-        )@app.get('/admin/datasets')
+        )
+
+@app.get('/admin/datasets')
 async def get_datasets(current_user: str = Depends(get_current_user_from_token)):
     """Get list of uploaded datasets (Admin only)"""
     # Check if user is admin

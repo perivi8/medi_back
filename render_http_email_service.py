@@ -10,7 +10,7 @@ import time
 import json
 import requests
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import re
 
 class RenderHttpEmailService:
@@ -204,7 +204,7 @@ class RenderHttpEmailService:
         except:
             return []
     
-    async def send_prediction_email(self, recipient_email: str, prediction_data: Dict, patient_data: Dict, user_id: str = None) -> Dict[str, Any]:
+    async def send_prediction_email(self, recipient_email: str, prediction_data: Dict, patient_data: Dict, user_id: Optional[str] = None) -> Dict[str, Any]:
         """Send prediction email using available HTTP providers"""
         start_time = time.time()
         
@@ -298,7 +298,11 @@ class RenderHttpEmailService:
             else:
                 return {
                     "success": False,
-                    "message": f"❌ SendGrid API error: {response.status_code} - {response.text}"
+                    "message": f"❌ SendGrid API error: {response.status_code} - {response.text}",
+                    "error_details": {
+                        "status_code": response.status_code,
+                        "response_text": response.text[:200]  # Limit response text
+                    }
                 }
                 
         except Exception as e:
@@ -392,7 +396,7 @@ class RenderHttpEmailService:
                 "message": f"❌ EmailJS error: {str(e)}"
             }
     
-    async def _store_email_locally(self, recipient_email: str, prediction_data: Dict, patient_data: Dict, user_id: str) -> Dict[str, Any]:
+    async def _store_email_locally(self, recipient_email: str, prediction_data: Dict, patient_data: Dict, user_id: Optional[str]) -> Dict[str, Any]:
         """Store email locally as fallback"""
         try:
             email_record = {
