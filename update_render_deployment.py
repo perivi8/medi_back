@@ -25,9 +25,9 @@ def show_render_update_instructions():
     
     # Environment variables to set
     env_vars = {
-        "GMAIL_EMAIL": "gokrishna98@gmail.com",
-        "GMAIL_APP_PASSWORD": "lwkvzupqanxvafrm",
-        "SENDER_EMAIL": "gokrishna98@gmail.com",
+        "GMAIL_EMAIL": "perivihk@gmail.com",
+        "GMAIL_APP_PASSWORD": "hgubjyxtimzmneht",
+        "SENDER_EMAIL": "perivihk@gmail.com",
         "SUPABASE_URL": "https://gucyzhjyciqnvxedmoxo.supabase.co",
         "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1Y3l6aGp5Y2lxbnZ4ZWRtb3hvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODg4MDQxOSwiZXhwIjoyMDc0NDU2NDE5fQ.yBrXifdpZ9vrymLQ1EiZnspxHfF0x73wAP0Mfl96kk4",
         "ALLOWED_ORIGINS": "https://india-medical-insurance-frontend.vercel.app,http://localhost:3000,http://localhost:3001",
@@ -65,7 +65,7 @@ def show_render_update_instructions():
     print("1. Go to your frontend: https://india-medical-insurance-frontend.vercel.app")
     print("2. Navigate to Prediction page")
     print("3. Fill out patient information")
-    print("4. Enter email: gowthaamankrishna1998@gmail.com")
+    print("4. Enter email: perivihk@gmail.com")
     print("5. Click 'Email & Download' button")
     print("6. Check Gmail inbox (including spam folder)")
     

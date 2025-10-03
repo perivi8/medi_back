@@ -25,9 +25,9 @@ services:
       - key: ALLOWED_ORIGINS
         value: https://medi-front-gamma.vercel.app,http://localhost:3000,*
       - key: GMAIL_EMAIL
-        value: gokrishna98@gmail.com
+        value: perivihk@gmail.com
       - key: GMAIL_APP_PASSWORD
-        value: lwkvzupqanxvafrm
+        value: hgubjyxtimzmneht
       # Add SendGrid API key for HTTP-based email service (works on Render)
       - key: SENDGRID_API_KEY
         value: SG.your_sendgrid_api_key_here
