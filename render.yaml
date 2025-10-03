@@ -29,6 +29,8 @@ services:
       - key: GMAIL_APP_PASSWORD
         value: hgubjyxtimzmneht
       # Add SendGrid API key for HTTP-based email service (works on Render)
+      # GET YOUR SENDGRID API KEY FROM: https://sendgrid.com
+      # Free tier: 100 emails/day
       - key: SENDGRID_API_KEY
         value: SG.your_sendgrid_api_key_here
     healthCheckPath: /health
